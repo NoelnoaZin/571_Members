@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Member List — 571 / STEPINTER</title>
+<meta name="description" content="Founders, Leaders and Members of 571 / STEPINTER."/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+<main>
+  <div class="bg-grid"></div>
+  <canvas id="particles" class="particles"></canvas>
+  <div class="container" style="position:relative;z-index:1">
+    <header class="page-header">
+      <p class="eyebrow">571 / STEPINTER</p>
+      <h1 class="page-title text-glow">Member List</h1>
+      <p class="page-sub">The operatives behind every move.</p>
+    </header>
+
+    <div class="search">
+      <span id="searchIcon"></span>
+      <input id="searchInput" placeholder="Search members, roles…"/>
+    </div>
+
+    <div id="memberSections"></div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  initNavbar("members");
+  initParticles("particles", 40);
+  document.getElementById("searchIcon").innerHTML = ICONS.search;
+
+  const CATS = ["Founder","Leader","Member"];
+  function render(){
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    const all = loadMembers();
+    const filtered = !q ? all : all.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      m.role.toLowerCase().includes(q) ||
+      m.category.toLowerCase().includes(q)
+    );
+    const root = document.getElementById("memberSections");
+    let html = "";
+    for(const cat of CATS){
+      const list = filtered.filter(m => m.category === cat);
+      if(!list.length) continue;
+      const featured = cat !== "Member";
+      const gridCls = cat === "Founder" ? "founder" : cat === "Leader" ? "leader" : "member";
+      const title = cat === "Member" ? "Members" : cat + "s";
+      html += `<div class="cat-section">
+        <div class="cat-divider"><span class="line"></span><h3>${title}</h3><span class="line right"></span></div>
+        <div class="grid ${gridCls}">${list.map(m => renderMemberCard(m, featured)).join("")}</div>
+      </div>`;
+    }
+    if(!filtered.length) html = '<p class="empty">No members match your search.</p>';
+    root.innerHTML = html;
+  }
+  document.getElementById("searchInput").addEventListener("input", render);
+  window.addEventListener("storage", e => { if(e.key === STORAGE_KEY) render(); });
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin Editor — 571 / STEPINTER</title>
+<meta name="robots" content="noindex,nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+<main id="main"></main>
+
+<script src="app.js"></script>
+<script>
+  const CATS = ["Founder","Leader","Member"];
+  const STATUSES = ["online","offline"];
+  const MAX_AVATAR_BYTES = 1500000;
+
+  function isUnlocked(){ return sessionStorage.getItem(ADMIN_SESSION_KEY) === "1"; }
+
+  function showGate(){
+    initNavbar("admin");
+    document.getElementById("main").innerHTML = `
+      <div class="bg-grid"></div>
+      <section class="gate">
+        <form id="gateForm" class="glass">
+          <div class="ico">${ICONS.lock}</div>
+          <p class="eyebrow" style="text-align:center">Restricted</p>
+          <h1 class="text-glow">Admin Access</h1>
+          <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px">Enter the access code to continue.</p>
+          <span class="lab">Access Code</span>
+          <input id="pwd" type="password" autofocus placeholder="••••••••"/>
+          <p id="err" style="display:none;font-size:12px;color:var(--red);margin-top:6px">Invalid code. Try again.</p>
+          <div class="actions">
+            <button type="button" class="btn" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn primary">${ICONS.shield} Unlock</button>
+          </div>
+        </form>
+      </section>
+    `;
+    document.getElementById("cancelBtn").addEventListener("click", () => location.href="index.html");
+    document.getElementById("gateForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const v = document.getElementById("pwd").value;
+      if(v === ADMIN_PASSWORD){
+        sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+        showAdmin();
+      } else {
+        document.getElementById("err").style.display = "block";
+        document.getElementById("pwd").value = "";
+      }
+    });
+  }
+
+  let draft = null;
+  let dirty = false;
+
+  function currentList(){ return draft || loadMembers(); }
+
+  function showAdmin(){
+    initNavbar("admin");
+    document.getElementById("main").innerHTML = `
+      <div class="bg-grid"></div>
+      <div class="container" style="position:relative;z-index:1;padding-bottom:60px">
+        <header class="page-header">
+          <p class="eyebrow">Local Editor</p>
+          <h1 class="page-title text-glow">Admin</h1>
+          <p class="page-sub">Changes save to your browser only (localStorage).</p>
+        </header>
+        <div class="admin-bar">
+          <button class="btn gold" id="addBtn">${ICONS.plus} Add member</button>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <span id="savedBadge" class="saved-badge" style="display:none">Saved ✓</span>
+            <button class="btn" id="discardBtn" style="display:none">${ICONS.x} Discard</button>
+            <button class="btn primary" id="saveBtn" disabled>${ICONS.save} Save changes</button>
+            <button class="btn danger" id="resetBtn">${ICONS.reset} Reset</button>
+          </div>
+        </div>
+        <div id="rows"></div>
+      </div>
+    `;
+    document.getElementById("addBtn").addEventListener("click", () => {
+      const list = currentList().slice();
+      list.push({ name:"New Member", role:"Member", facebookLink:"https://facebook.com/", status:"offline", category:"Member" });
+      draft = list; setDirty(true); renderRows();
+    });
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      if(!draft) return;
+      saveMembers(draft); draft = null; setDirty(false);
+      const b = document.getElementById("savedBadge"); b.style.display = "inline";
+      setTimeout(() => b.style.display = "none", 3000);
+      toast("Saved successfully");
+      renderRows();
+    });
+    document.getElementById("discardBtn").addEventListener("click", () => { draft = null; setDirty(false); renderRows(); });
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if(!confirm("Reset all members to defaults?")) return;
+      resetMembers(); draft = null; setDirty(false); renderRows();
+    });
+    renderRows();
+  }
+
+  function setDirty(v){
+    dirty = v;
+    document.getElementById("saveBtn").disabled = !v;
+    document.getElementById("discardBtn").style.display = v ? "inline-flex" : "none";
+  }
+
+  function renderRows(){
+    const list = currentList();
+    const root = document.getElementById("rows");
+    if(!list.length){ root.innerHTML = '<p class="empty">No members. Click "Add member" to begin.</p>'; return; }
+    root.innerHTML = list.map((m,i) => rowHtml(m,i)).join("");
+    list.forEach((m,i) => bindRow(i));
+  }
+
+  function rowHtml(m, i){
+    const initials = (m.name||"").split(" ").map(n=>n[0]).slice(0,2).join("");
+    const av = m.avatar
+      ? `<img src="${escapeAttr(m.avatar)}" alt=""/>`
+      : `<div class="placeholder">${escapeHtml(initials || "?")}</div>`;
+    return `
+      <div class="row glass" data-i="${i}">
+        <div class="av-edit">
+          <div class="avatar">${av}</div>
+          <input type="file" accept="image/*" class="file" hidden/>
+          <div class="av-edit-btns">
+            <button type="button" class="mini-btn upload">${ICONS.upload} Upload</button>
+            ${m.avatar ? '<button type="button" class="mini-btn clear clearBtn">Clear</button>' : ''}
+          </div>
+          <p class="err" style="display:none"></p>
+        </div>
+        <div class="fields">
+          <label><span class="lab">Name</span><input data-k="name" value="${escapeAttr(m.name)}"/></label>
+          <label><span class="lab">Role</span><input data-k="role" value="${escapeAttr(m.role)}"/></label>
+          <label><span class="lab">Category</span>
+            <select data-k="category">${CATS.map(c=>`<option ${c===m.category?'selected':''}>${c}</option>`).join("")}</select>
+          </label>
+          <label><span class="lab">Status</span>
+            <select data-k="status">${STATUSES.map(s=>`<option ${s===m.status?'selected':''}>${s}</option>`).join("")}</select>
+          </label>
+          <label class="full"><span class="lab">Facebook link</span>
+            <input data-k="facebookLink" value="${escapeAttr(m.facebookLink)}"/>
+          </label>
+        </div>
+        <button class="del" aria-label="Remove member">${ICONS.trash}</button>
+      </div>
+    `;
+  }
+
+  function bindRow(i){
+    const row = document.querySelector(`.row[data-i="${i}"]`);
+    if(!row) return;
+    function update(patch){
+      const list = currentList().slice();
+      list[i] = { ...list[i], ...patch };
+      draft = list; setDirty(true);
+    }
+    row.querySelectorAll("input[data-k], select[data-k]").forEach(el => {
+      el.addEventListener("input", () => update({ [el.dataset.k]: el.value }));
+      el.addEventListener("change", () => update({ [el.dataset.k]: el.value }));
+    });
+    const file = row.querySelector(".file");
+    row.querySelector(".upload").addEventListener("click", () => file.click());
+    file.addEventListener("change", async (e) => {
+      const f = e.target.files && e.target.files[0]; if(!f) return;
+      const errEl = row.querySelector(".err"); errEl.style.display = "none";
+      if(!f.type.startsWith("image/")){ errEl.textContent="Please choose an image file."; errEl.style.display="block"; return; }
+      if(f.size > MAX_AVATAR_BYTES){ errEl.textContent="Image too large (max 1.5 MB)."; errEl.style.display="block"; return; }
+      const dataUrl = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result)); r.onerror=rej; r.readAsDataURL(f); });
+      update({ avatar: dataUrl });
+      renderRows();
+    });
+    const cb = row.querySelector(".clearBtn");
+    if(cb) cb.addEventListener("click", () => { update({ avatar: undefined }); renderRows(); });
+    row.querySelector(".del").addEventListener("click", () => {
+      const list = currentList().slice(); list.splice(i,1);
+      draft = list; setDirty(true); renderRows();
+    });
+  }
+
+  if(isUnlocked()) showAdmin(); else showGate();
+</script>
+</body>
+</html>

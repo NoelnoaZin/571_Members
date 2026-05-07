@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>571 / STEPINTER — Esports Clan</title>
+<meta name="description" content="We Move As One. We Strike As 571."/>
+<meta property="og:title" content="571 / STEPINTER"/>
+<meta property="og:description" content="We Move As One. We Strike As 571."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+<main>
+  <div class="bg-grid"></div>
+  <canvas id="particles" class="particles"></canvas>
+  <div class="rings"><span></span><span></span><span></span></div>
+
+  <section class="hero">
+    <div class="hero-logo-wrap">
+      <img class="hero-logo" src="assets/hero-logo.png" alt="571 STEPINTER"/>
+    </div>
+    <p class="slogan">"We Move As One. We Strike As 571."</p>
+    <div class="cta-wrap">
+      <a class="cta" href="members.html">View Members <span id="ctaArrow"></span></a>
+      <span class="cta-sub">Members 2026</span>
+    </div>
+    <div class="platform"><div class="p1"></div><div class="p2"></div><div class="p3"></div></div>
+  </section>
+
+  <footer>
+    <div class="foot-inner">
+      <div class="socials">
+        <a class="icon-btn" href="#" id="ic1"></a>
+        <a class="icon-btn" href="#" id="ic2"></a>
+        <a class="icon-btn" href="#" id="ic3"></a>
+      </div>
+      <p class="foot-tag">Designed by 571 / STEPINTER</p>
+    </div>
+  </footer>
+</main>
+
+<script src="app.js"></script>
+<script>
+  initNavbar("home");
+  initParticles("particles", 70);
+  document.getElementById("ctaArrow").innerHTML = ICONS.arrow;
+  document.getElementById("ic1").innerHTML = ICONS.facebook;
+  document.getElementById("ic2").innerHTML = ICONS.msg;
+  document.getElementById("ic3").innerHTML = ICONS.youtube;
+</script>
+</body>
+</html>

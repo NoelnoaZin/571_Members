@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Gallery — 571 / STEPINTER</title>
+<meta name="description" content="Snapshots from the 571 / STEPINTER battlefront."/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="nav-root"></div>
+<main>
+  <div class="bg-grid"></div>
+  <canvas id="particles" class="particles"></canvas>
+  <div class="container" style="position:relative;z-index:1">
+    <header class="page-header">
+      <p class="eyebrow">Archive</p>
+      <h1 class="page-title text-glow">Gallery</h1>
+      <p class="page-sub">Highlights and key moments from the squad.</p>
+    </header>
+    <div class="gal" id="gal"></div>
+  </div>
+</main>
+<script src="app.js"></script>
+<script>
+  initNavbar("gallery");
+  initParticles("particles", 30);
+  const gal = document.getElementById("gal");
+  let h = "";
+  for(let n=1; n<=8; n++){
+    h += `<div class="tile glass">
+      <div class="glow" style="background: radial-gradient(circle at ${20+n*8}% ${30+n*5}%, rgba(232,196,106,.6), transparent 60%)"></div>
+      <div class="lbl">571 · ${String(n).padStart(2,'0')}</div>
+    </div>`;
+  }
+  gal.innerHTML = h;
+</script>
+</body>
+</html>
